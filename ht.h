@@ -184,7 +184,6 @@ public:
     size_t size() const;
 
 
-    size_t size_elements() const;
     /**
      * @brief Inserts a new item into the map, or, if an item with the
      *        given key already exists, it updates the Value of that item
@@ -275,6 +274,7 @@ private:
     HASH_INDEX_T mIndex_;  // index to CAPACITIES
     double resizeAlpha_;
     // ADD MORE DATA MEMBERS HERE, AS NECESSARY
+    double size_elements;
 
 };
 
@@ -302,6 +302,7 @@ HashTable<K,V,Prober,Hash,KEqual>::HashTable(
     this->mIndex_ = 0;
     this->table_ = std::vector<HashItem*>(CAPACITIES[mIndex_]);
     this->resizeAlpha_ = resizeAlpha;
+    this->size_elements = 0.0;
 }
 
 // To be completed
@@ -335,29 +336,20 @@ size_t HashTable<K,V,Prober,Hash,KEqual>::size() const
     return count;
 }
 
-template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
-size_t HashTable<K,V,Prober,Hash,KEqual>::size_elements() const
-{
-    size_t count = 0;
-    for(size_t i=0; i < table_.size(); i++){
-        if(table_[i] != NULL){
-        count++;
-        }
-    }
-    return count;
-}
+
 
 // To be completed
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
 {
-    if(double((this->size_elements()))/CAPACITIES[mIndex_] >= resizeAlpha_){
+    if(this->size_elements/CAPACITIES[mIndex_] >= resizeAlpha_){
       this->resize();
     }
     
     HASH_INDEX_T loc = this->probe(p.first);
     if(loc != Prober::npos && table_[loc] == NULL){
       table_[loc] = new HashItem(p);
+      this->size_elements++;
     }
     else if(loc != Prober::npos){
       delete table_[loc];
@@ -455,6 +447,7 @@ template<typename K, typename V, typename Prober, typename Hash, typename KEqual
 void HashTable<K,V,Prober,Hash,KEqual>::resize()
 {
   this->mIndex_++;
+  this->size_elements = 0.0;
   if(mIndex_ >= sizeof(CAPACITIES)/sizeof(CAPACITIES[0])){
     std::logic_error("No more capacities exist");
   }
